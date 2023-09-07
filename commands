@@ -1,0 +1,59 @@
+1. Quality control 
+
+# Quality check of Illumina sequences 
+fastqc /path/to/sample_R1.fastq -o sample_R1_FastQCresults 
+fastqc /path/to/sample_R2.fastq -o sample_R2_FastQCresults 
+
+# Quality check of Nanopore sequence 
+fastqc /path/to/ONT_read.fastq -o ONT_read_FastQCresults 
+
+2. Trimming adapters and low quality sequences 
+
+# Run fastp on Illumina sequences 
+fastp -i /path/to/sample_R1.fastq -I /path/to/sample_R2.fastq -o trimmed_R1.fastq -O trimmed_R2.fastq 
+
+# Run fastp on ONT sequence 
+fastp /path/to/ONT_read.fastq -o trimmed_ONT.fastq 
+
+# Run QC again to check and trim again if needed 
+
+3. Dereplicate and subsample Illumina sequences 
+
+# Make text file and open it 
+touch input_file.txt 
+
+nano input_file.txt 
+
+# Add full path of the sequences to the file 
+
+# Run FastUniq 
+fastuniq -i input_file.txt -t q -o dereplicated_R1.fastq -p dereplicated_R2.fastq 
+
+# Run seqtk to subsample 
+seqtk sample -s <set seed number> /path/to/dereplicated_R1.fastq <add decimal indication of proportion here> > sample_R1.fastq 
+
+seqtk sample -s <set seed number> /path/to/dereplicated_R2.fastq <add decimal indication of proportion here> > sample_R2.fastq 
+
+4. Trim and filter ONT sequence 
+
+# Use Nanofilt 
+gunzip -c /path/to/ONT_read.fastq.gz | NanoFilt -q <add the Phred score quality you want for reads to be removed here> -l <add the number of base pair less than you want to remove here> | gzip > ONT_trimmed_and_filtered.fastq.gz
+
+# You can generate the plot using NanoPlot 
+
+5. Assembly 
+
+# Run Unicycler hybrid assembly 
+unicycler -1 /path/to/sample_R1.fastq.gz -2 /path/to/sample_R2.fastq.gz -l /path/to/ONT_read.fastq.gz -o <insert output directory here> 
+
+6. Viewing 
+
+# View assembly using Bandage 
+Bandage load <insert file name here in .gfa format> --draw 
+
+7. Gene arrangement 
+
+# Download the genbank file of the reference genome from NCBI 
+
+# View the gene arrangement of both sequences using Clinker 
+clinker *.gbf -p 
